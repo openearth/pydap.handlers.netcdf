@@ -8,6 +8,8 @@ install_requires = [
     # List your project dependencies here.
     # For more details, see:
     # http://packages.python.org/distribute/setuptools.html#declaring-dependencies
+    "Numpy",
+    "pupynere",
 ]
 
 
