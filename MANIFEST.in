@@ -1,1 +1,2 @@
-include setup.py
+include README.rst
+include NEWS.txt
