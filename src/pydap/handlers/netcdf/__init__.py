@@ -23,6 +23,8 @@ from pydap.exceptions import OpenFileError
 
 class NetCDFHandler(BaseHandler):
 
+    """A simple handler for NetCDF files."""
+
     __version__ = get_distribution("pydap.handlers.netcdf").version
     extensions = re.compile(r"^.*\.(nc|cdf)$", re.IGNORECASE)
 
@@ -75,14 +77,18 @@ class NetCDFHandler(BaseHandler):
                 dim, vars[dim][:], None, attrs(vars[dim]))
 
     def close(self):
+        """Close the NetCDF file."""
         self.fp.close()
 
 
 class NetcdfData(object):
-    """
-    A wrapper for Netcdf variables, making them behave more like Numpy arrays.
+
+    """A wrapper for Netcdf variables.
+
+    Return an object that behaves like a Numpy array.
 
     """
+
     def __init__(self, var):
         self.var = var
         self.dtype = np.dtype(self.var.dtype.char)
