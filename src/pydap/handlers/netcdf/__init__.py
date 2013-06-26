@@ -64,8 +64,7 @@ class NetCDFHandler(BaseHandler):
             self.dataset[grid] = GridType(grid, attrs(vars[grid]))
             # add array
             self.dataset[grid][grid] = BaseType(
-                grid, NetcdfData(vars[grid]), vars[grid].dimensions,
-                attrs(vars[grid]))
+                grid, vars[grid], vars[grid].dimensions, attrs(vars[grid]))
             # add maps
             for dim in vars[grid].dimensions:
                 self.dataset[grid][dim] = BaseType(
@@ -79,49 +78,6 @@ class NetCDFHandler(BaseHandler):
     def close(self):
         """Close the NetCDF file."""
         self.fp.close()
-
-
-class NetcdfData(object):
-
-    """A wrapper for Netcdf variables.
-
-    Return an object that behaves like a Numpy array.
-
-    """
-
-    def __init__(self, var):
-        self.var = var
-        self.dtype = np.dtype(self.var.dtype.char)
-        self.shape = var.shape
-
-    # Comparisons are passed to the data.
-    def __eq__(self, other):
-        return self.var[:] == other
-
-    def __ne__(self, other):
-        return self.var[:] != other
-
-    def __ge__(self, other):
-        return self.var[:] >= other
-
-    def __le__(self, other):
-        return self.var[:] <= other
-
-    def __gt__(self, other):
-        return self.var[:] > other
-
-    def __lt__(self, other):
-        return self.var[:] < other
-
-    # Implement the sequence and iter protocols.
-    def __getitem__(self, index):
-        return self.var[index]
-
-    def __len__(self):
-        return self.shape[0]
-
-    def __iter__(self):
-        return iter(self.var[:])
 
 
 if __name__ == "__main__":
