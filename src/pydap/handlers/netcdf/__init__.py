@@ -9,12 +9,18 @@ from email.utils import formatdate
 import numpy as np
 from pkg_resources import get_distribution
 
+# available NetCDF modules
+NETCDF4 = 0
+PUPYNERE = 1
+
 try:
     from netCDF4 import Dataset as netcdf_file
     attrs = lambda var: {k: getattr(var, k) for k in var.ncattrs()}
+    NETCDF_MODULE = NETCDF4
 except ImportError:
     from pupynere import netcdf_file
     attrs = lambda var: var._attributes
+    NETCDF_MODULE = PUPYNERE
 
 from pydap.model import *
 from pydap.handlers.lib import BaseHandler
@@ -32,7 +38,7 @@ class NetCDFHandler(BaseHandler):
         BaseHandler.__init__(self)
 
         try:
-            self.fp = netcdf_file(filepath)
+            self.fp = netcdf_file(filepath, maskandscale=False)
         except Exception, exc:
             message = 'Unable to open file %s: %s' % (filepath, exc)
             raise OpenFileError(message)
@@ -46,6 +52,11 @@ class NetCDFHandler(BaseHandler):
         # shortcuts
         vars = self.fp.variables
         dims = self.fp.dimensions
+
+        # turn off automatic scaling
+        if NETCDF_MODULE == NETCDF4:
+            for var in vars.values():
+                var.set_auto_maskandscale(False)
 
         # build dataset
         name = os.path.split(filepath)[1]
