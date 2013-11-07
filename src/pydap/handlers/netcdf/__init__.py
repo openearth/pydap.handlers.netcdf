@@ -10,17 +10,27 @@ import numpy as np
 from pkg_resources import get_distribution
 
 # available NetCDF modules
-NETCDF4 = 0
-PUPYNERE = 1
+NETCDF4 = "netCDF4"
+PUPYNERE = "pupynere"
 
 try:
     from netCDF4 import Dataset as netcdf_file
-    attrs = lambda var: {k: getattr(var, k) for k in var.ncattrs()}
     NETCDF_MODULE = NETCDF4
+
+    def attrs(var):
+        """Use the netCDF4 API to load all attributes."""
+        if hasattr(var, "ncattrs"):
+            return {k: getattr(var, k) for k in var.ncattrs()}
+        else:
+            return {}
+
 except ImportError:
     from pupynere import netcdf_file
-    attrs = lambda var: var._attributes
     NETCDF_MODULE = PUPYNERE
+    
+    def attrs(var):
+        """Pupynere stores attributes in a special attribute."""
+        return getattr(var, "_attributes", {})
 
 from pydap.model import *
 from pydap.handlers.lib import BaseHandler
@@ -50,13 +60,22 @@ class NetCDFHandler(BaseHandler):
                         time.localtime(os.stat(filepath)[ST_MTIME]))))))
 
         # shortcuts
-        vars = self.fp.variables
-        dims = self.fp.dimensions
+        vars = dict(self.fp.variables)
+        dims = dict(self.fp.dimensions)
 
         # turn off automatic scaling
         if NETCDF_MODULE == NETCDF4:
             for var in vars.values():
                 var.set_auto_maskandscale(False)
+
+        # add missing dimensions
+        for dim in dims:
+            if dim not in vars:
+                if NETCDF_MODULE == NETCDF4:
+                    length = len(dims[dim])
+                else:
+                    length = dims[dim]
+                vars[dim] = np.arange(length)
 
         # build dataset
         name = os.path.split(filepath)[1]
